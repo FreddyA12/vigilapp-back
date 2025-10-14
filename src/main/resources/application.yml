@@ -22,3 +22,18 @@ info:
     name: Fram Vigilapp
     description: API para la vigilancia
     version: 1.0.0
+
+jwt:
+  secret: vigilapp-secret-key-for-jwt-token-generation-minimum-256-bits-required-for-hs256-algorithm
+
+face:
+  verification:
+    service:
+      url: http://localhost:8000
+      enabled: true
+      path: face-verification-service
+      python:
+        command: python
+      startup:
+        wait:
+          seconds: 10

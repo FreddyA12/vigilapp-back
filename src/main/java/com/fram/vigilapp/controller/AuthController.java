@@ -6,10 +6,9 @@ import com.fram.vigilapp.dto.UserDto;
 import com.fram.vigilapp.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 
 @RestController
@@ -20,8 +19,21 @@ public class AuthController {
     private final AuthService authService;
 
 
-    @PostMapping("/register")
-    public UserDto registerUser(@Valid @RequestBody SaveUserDto request) {
+    @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public UserDto registerUser(
+            @RequestParam("name") String name,
+            @RequestParam("email") String email,
+            @RequestParam("password") String password,
+            @RequestParam("fotoCedula") MultipartFile fotoCedula,
+            @RequestParam("selfie") MultipartFile selfie
+    ) {
+        SaveUserDto request = new SaveUserDto();
+        request.setName(name);
+        request.setEmail(email);
+        request.setPassword(password);
+        request.setFotoCedula(fotoCedula);
+        request.setSelfie(selfie);
+
         return authService.register(request);
     }
 

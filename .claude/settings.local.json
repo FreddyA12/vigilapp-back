@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(test:*)",
+      "Bash(venv/Scripts/pip install:*)",
+      "Bash(./gradlew compileJava:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
