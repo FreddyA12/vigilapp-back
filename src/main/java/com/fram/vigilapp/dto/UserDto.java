@@ -2,9 +2,12 @@ package com.fram.vigilapp.dto;
 
 import lombok.Data;
 
+import java.util.UUID;
+
 @Data
 public class UserDto {
-    Integer id;
-    String name;
+    UUID id;
+    String firstName;
+    String lastName;
     String email;
 }

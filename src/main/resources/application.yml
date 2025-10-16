@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5433/vigilapp
+    url: jdbc:postgresql://localhost:5432/vigilapp
     username: postgres
-    password: root
+    password: postgres
   jpa:
     hibernate:
       ddl-auto: none

@@ -8,7 +8,10 @@ import org.springframework.web.multipart.MultipartFile;
 @Data
 public class SaveUserDto {
     @NotBlank(message = "El nombre es obligatorio")
-    String name;
+    String firstName;
+
+    @NotBlank(message = "El apellido es obligatorio")
+    String lastName;
 
     @Email(message = "El correo no es válido")
     @NotBlank(message = "El correo es obligatorio")

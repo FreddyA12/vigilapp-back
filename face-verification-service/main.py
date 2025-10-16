@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
 from services.id_validator import validate_id_document
-from services.face_comparator import compare_faces
+from services.face_comparator import compare_faces_fr
 
 app = FastAPI(title="Face Verification Service", version="1.0.0")
 
@@ -71,7 +71,7 @@ async def verify_face(
         id_bytes = await id_image.read()
         selfie_bytes = await selfie.read()
 
-        result = compare_faces(id_bytes, selfie_bytes)
+        result = compare_faces_fr(id_bytes, selfie_bytes)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error comparing faces: {str(e)}")
