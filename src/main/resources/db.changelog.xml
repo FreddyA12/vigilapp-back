@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!-- Enable required extensions -->
+    <changeSet id="ext-1" author="junie">
+        <sql>CREATE EXTENSION IF NOT EXISTS postgis</sql>
+    </changeSet>
+    <changeSet id="ext-2" author="junie">
+        <sql>CREATE EXTENSION IF NOT EXISTS citext</sql>
+    </changeSet>
+
+    <!-- Cities -->
+    <changeSet id="schema-1-cities" author="junie">
+        <createTable tableName="cities">
+            <column name="id" type="INT">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="TEXT"/>
+            <column name="province" type="TEXT"/>
+        </createTable>
+    </changeSet>
+
+    <!-- Users -->
+    <changeSet id="schema-2-users" author="junie">
+        <createTable tableName="users">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="email" type="CITEXT">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="password_hash" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="first_name" type="TEXT"/>
+            <column name="last_name" type="TEXT"/>
+            <column name="phone" type="TEXT"/>
+            <column name="document_type" type="TEXT"/>
+            <column name="document_number" type="TEXT"/>
+            <column name="role" type="TEXT"/>
+            <column name="status" type="TEXT"/>
+            <column name="address" type="TEXT"/>
+            <column name="city_id" type="INT"/>
+            <column name="created_at" type="TIMESTAMPTZ"/>
+            <column name="updated_at" type="TIMESTAMPTZ"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="users" baseColumnNames="city_id"
+                                 referencedTableName="cities" referencedColumnNames="id"
+                                 constraintName="fk_users_city"/>
+        <addDefaultValue tableName="users" columnName="id" defaultValueComputed="gen_random_uuid()"/>
+    </changeSet>
+
+    <!-- Alerts -->
+    <changeSet id="schema-3-alerts" author="junie">
+        <createTable tableName="alerts">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="created_by_user_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="category" type="TEXT"/>
+            <column name="status" type="TEXT"/>
+            <column name="verification_status" type="TEXT"/>
+            <column name="title" type="TEXT"/>
+            <column name="description" type="TEXT"/>
+            <column name="is_anonymous" type="BOOLEAN"/>
+            <column name="address" type="TEXT"/>
+            <column name="city_id" type="INT"/>
+            <column name="geometry" type="GEOGRAPHY(POINT,4326)"/>
+            <column name="radius_m" type="INT"/>
+            <column name="created_at" type="TIMESTAMPTZ"/>
+            <column name="updated_at" type="TIMESTAMPTZ"/>
+            <column name="resolved_at" type="TIMESTAMPTZ"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="alerts" baseColumnNames="created_by_user_id"
+                                 referencedTableName="users" referencedColumnNames="id"
+                                 constraintName="fk_alerts_user"/>
+        <addForeignKeyConstraint baseTableName="alerts" baseColumnNames="city_id"
+                                 referencedTableName="cities" referencedColumnNames="id"
+                                 constraintName="fk_alerts_city"/>
+        <addDefaultValue tableName="alerts" columnName="id" defaultValueComputed="gen_random_uuid()"/>
+    </changeSet>
+
+    <!-- Media -->
+    <changeSet id="schema-4-media" author="junie">
+        <createTable tableName="media">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="owner_user_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="url" type="TEXT"/>
+            <column name="mime_type" type="TEXT"/>
+            <column name="for_blur_analysis" type="BOOLEAN"/>
+            <column name="created_at" type="TIMESTAMPTZ"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="media" baseColumnNames="owner_user_id"
+                                 referencedTableName="users" referencedColumnNames="id"
+                                 constraintName="fk_media_owner"/>
+        <addDefaultValue tableName="media" columnName="id" defaultValueComputed="gen_random_uuid()"/>
+    </changeSet>
+
+    <!-- AlertMedia N:N -->
+    <changeSet id="schema-5-alert_media" author="junie">
+        <createTable tableName="alert_media">
+            <column name="alert_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="media_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey tableName="alert_media" columnNames="alert_id, media_id" constraintName="pk_alert_media"/>
+        <addForeignKeyConstraint baseTableName="alert_media" baseColumnNames="alert_id"
+                                 referencedTableName="alerts" referencedColumnNames="id"
+                                 constraintName="fk_alert_media_alert"/>
+        <addForeignKeyConstraint baseTableName="alert_media" baseColumnNames="media_id"
+                                 referencedTableName="media" referencedColumnNames="id"
+                                 constraintName="fk_alert_media_media"/>
+    </changeSet>
+
+    <!-- Notifications -->
+    <changeSet id="schema-6-notifications" author="junie">
+        <createTable tableName="notifications">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="alert_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="channel" type="TEXT"/>
+            <column name="status" type="TEXT"/>
+            <column name="sent_at" type="TIMESTAMPTZ"/>
+            <column name="delivered_at" type="TIMESTAMPTZ"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="notifications" baseColumnNames="alert_id"
+                                 referencedTableName="alerts" referencedColumnNames="id"
+                                 constraintName="fk_notifications_alert"/>
+        <addForeignKeyConstraint baseTableName="notifications" baseColumnNames="user_id"
+                                 referencedTableName="users" referencedColumnNames="id"
+                                 constraintName="fk_notifications_user"/>
+        <addDefaultValue tableName="notifications" columnName="id" defaultValueComputed="gen_random_uuid()"/>
+    </changeSet>
+
+    <!-- IdentityVerification -->
+    <changeSet id="schema-7-identity_verifications" author="junie">
+        <createTable tableName="identity_verifications">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="selfie_media_id" type="UUID"/>
+            <column name="provider" type="TEXT"/>
+            <column name="status" type="TEXT"/>
+            <column name="created_at" type="TIMESTAMPTZ"/>
+            <column name="decided_at" type="TIMESTAMPTZ"/>
+            <column name="liveness_score" type="NUMERIC(5,2)"/>
+            <column name="match_score" type="NUMERIC(5,2)"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="identity_verifications" baseColumnNames="user_id"
+                                 referencedTableName="users" referencedColumnNames="id"
+                                 constraintName="fk_identity_user"/>
+        <addForeignKeyConstraint baseTableName="identity_verifications" baseColumnNames="selfie_media_id"
+                                 referencedTableName="media" referencedColumnNames="id"
+                                 constraintName="fk_identity_selfie_media"/>
+        <addDefaultValue tableName="identity_verifications" columnName="id" defaultValueComputed="gen_random_uuid()"/>
+    </changeSet>
+
+    <!-- ModerationCase -->
+    <changeSet id="schema-8-moderation_cases" author="junie">
+        <createTable tableName="moderation_cases">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="alert_id" type="UUID"/>
+            <column name="status" type="TEXT"/>
+            <column name="opened_by_user_id" type="UUID"/>
+            <column name="assigned_to_user_id" type="UUID"/>
+            <column name="notes" type="TEXT"/>
+            <column name="opened_at" type="TIMESTAMPTZ"/>
+            <column name="closed_at" type="TIMESTAMPTZ"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="moderation_cases" baseColumnNames="alert_id"
+                                 referencedTableName="alerts" referencedColumnNames="id"
+                                 constraintName="fk_modcase_alert"/>
+        <addForeignKeyConstraint baseTableName="moderation_cases" baseColumnNames="opened_by_user_id"
+                                 referencedTableName="users" referencedColumnNames="id"
+                                 constraintName="fk_modcase_opened_by"/>
+        <addForeignKeyConstraint baseTableName="moderation_cases" baseColumnNames="assigned_to_user_id"
+                                 referencedTableName="users" referencedColumnNames="id"
+                                 constraintName="fk_modcase_assigned_to"/>
+        <addDefaultValue tableName="moderation_cases" columnName="id" defaultValueComputed="gen_random_uuid()"/>
+    </changeSet>
+
+    <!-- AlertValidation -->
+    <changeSet id="schema-9-alert_validations" author="junie">
+        <createTable tableName="alert_validations">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="alert_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="vote_type" type="TEXT"/>
+            <column name="created_at" type="TIMESTAMPTZ"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="alert_validations" baseColumnNames="alert_id"
+                                 referencedTableName="alerts" referencedColumnNames="id"
+                                 constraintName="fk_alert_validation_alert"/>
+        <addForeignKeyConstraint baseTableName="alert_validations" baseColumnNames="user_id"
+                                 referencedTableName="users" referencedColumnNames="id"
+                                 constraintName="fk_alert_validation_user"/>
+        <addDefaultValue tableName="alert_validations" columnName="id" defaultValueComputed="gen_random_uuid()"/>
+    </changeSet>
+
+    <!-- UserDevices -->
+    <changeSet id="schema-10-user_devices" author="junie">
+        <createTable tableName="user_devices">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="provider" type="TEXT"/>
+            <column name="token" type="TEXT"/>
+            <column name="created_at" type="TIMESTAMPTZ"/>
+            <column name="last_seen_at" type="TIMESTAMPTZ"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="user_devices" baseColumnNames="user_id"
+                                 referencedTableName="users" referencedColumnNames="id"
+                                 constraintName="fk_user_devices_user"/>
+        <addDefaultValue tableName="user_devices" columnName="id" defaultValueComputed="gen_random_uuid()"/>
+    </changeSet>
+
+    <!-- UserZones (1:1) -->
+    <changeSet id="schema-11-user_zones" author="junie">
+        <createTable tableName="user_zones">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="UUID">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="geometry" type="GEOGRAPHY(POLYGON,4326)"/>
+            <column name="radius_m" type="INT"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="user_zones" baseColumnNames="user_id"
+                                 referencedTableName="users" referencedColumnNames="id"
+                                 constraintName="fk_user_zones_user"/>
+        <addDefaultValue tableName="user_zones" columnName="id" defaultValueComputed="gen_random_uuid()"/>
+    </changeSet>
+
+    <!-- Face Verification Fields -->
+    <changeSet id="schema-12-face_verification_fields" author="junie">
+        <addColumn tableName="identity_verifications">
+            <!-- ID document validation -->
+            <column name="id_document_media_id" type="UUID"/>
+            <column name="is_valid_id_document" type="BOOLEAN"/>
+            <column name="id_validation_confidence" type="NUMERIC(5,2)"/>
+
+            <!-- Face comparison -->
+            <column name="face_match_similarity" type="NUMERIC(5,4)"/>
+            <column name="face_match_confidence" type="NUMERIC(5,2)"/>
+            <column name="faces_match" type="BOOLEAN"/>
+
+            <!-- Additional metadata -->
+            <column name="verification_method" type="TEXT"/>
+            <column name="failure_reason" type="TEXT"/>
+        </addColumn>
+
+        <addForeignKeyConstraint baseTableName="identity_verifications"
+                                 baseColumnNames="id_document_media_id"
+                                 referencedTableName="media"
+                                 referencedColumnNames="id"
+                                 constraintName="fk_identity_id_document_media"/>
+    </changeSet>
+
+</databaseChangeLog>
