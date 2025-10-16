@@ -28,6 +28,10 @@ public class IdentityVerification {
     @JoinColumn(name = "selfie_media_id")
     private Media selfieMedia;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_document_media_id")
+    private Media idDocumentMedia;
+
     @Column(name = "provider", columnDefinition = "text")
     private String provider;
 
@@ -45,4 +49,28 @@ public class IdentityVerification {
 
     @Column(name = "match_score", precision = 5, scale = 2)
     private BigDecimal matchScore;
+
+    // ID Document Validation
+    @Column(name = "is_valid_id_document")
+    private Boolean isValidIdDocument;
+
+    @Column(name = "id_validation_confidence", precision = 5, scale = 2)
+    private BigDecimal idValidationConfidence;
+
+    // Face Comparison
+    @Column(name = "face_match_similarity", precision = 5, scale = 4)
+    private BigDecimal faceMatchSimilarity;
+
+    @Column(name = "face_match_confidence", precision = 5, scale = 2)
+    private BigDecimal faceMatchConfidence;
+
+    @Column(name = "faces_match")
+    private Boolean facesMatch;
+
+    // Additional Metadata
+    @Column(name = "verification_method", columnDefinition = "text")
+    private String verificationMethod; // e.g., "FACE_RECOGNITION_PYTHON"
+
+    @Column(name = "failure_reason", columnDefinition = "text")
+    private String failureReason;
 }

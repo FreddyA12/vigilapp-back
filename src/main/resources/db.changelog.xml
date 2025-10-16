@@ -264,4 +264,29 @@
         <addDefaultValue tableName="user_zones" columnName="id" defaultValueComputed="gen_random_uuid()"/>
     </changeSet>
 
+    <!-- Face Verification Fields -->
+    <changeSet id="schema-12-face_verification_fields" author="junie">
+        <addColumn tableName="identity_verifications">
+            <!-- ID document validation -->
+            <column name="id_document_media_id" type="UUID"/>
+            <column name="is_valid_id_document" type="BOOLEAN"/>
+            <column name="id_validation_confidence" type="NUMERIC(5,2)"/>
+
+            <!-- Face comparison -->
+            <column name="face_match_similarity" type="NUMERIC(5,4)"/>
+            <column name="face_match_confidence" type="NUMERIC(5,2)"/>
+            <column name="faces_match" type="BOOLEAN"/>
+
+            <!-- Additional metadata -->
+            <column name="verification_method" type="TEXT"/>
+            <column name="failure_reason" type="TEXT"/>
+        </addColumn>
+
+        <addForeignKeyConstraint baseTableName="identity_verifications"
+                                 baseColumnNames="id_document_media_id"
+                                 referencedTableName="media"
+                                 referencedColumnNames="id"
+                                 constraintName="fk_identity_id_document_media"/>
+    </changeSet>
+
 </databaseChangeLog>
