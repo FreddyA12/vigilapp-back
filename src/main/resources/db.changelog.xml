@@ -289,4 +289,66 @@
                                  constraintName="fk_identity_id_document_media"/>
     </changeSet>
 
+    <!-- Migrate cities.id from INT to UUID -->
+    <changeSet id="schema-13-cities_id_to_uuid" author="junie">
+        <!-- Step 1: Drop foreign key constraints referencing cities.id -->
+        <dropForeignKeyConstraint baseTableName="users" constraintName="fk_users_city"/>
+        <dropForeignKeyConstraint baseTableName="alerts" constraintName="fk_alerts_city"/>
+
+        <!-- Step 2: Add new UUID columns for city references -->
+        <addColumn tableName="users">
+            <column name="city_id_new" type="UUID"/>
+        </addColumn>
+        <addColumn tableName="alerts">
+            <column name="city_id_new" type="UUID"/>
+        </addColumn>
+
+        <!-- Step 3: Add new UUID column to cities table -->
+        <addColumn tableName="cities">
+            <column name="id_new" type="UUID"/>
+        </addColumn>
+
+        <!-- Step 4: Generate UUIDs for existing cities -->
+        <sql>UPDATE cities SET id_new = gen_random_uuid()</sql>
+
+        <!-- Step 5: Update references in users and alerts tables -->
+        <sql>
+            UPDATE users u
+            SET city_id_new = c.id_new
+            FROM cities c
+            WHERE u.city_id = c.id
+        </sql>
+        <sql>
+            UPDATE alerts a
+            SET city_id_new = c.id_new
+            FROM cities c
+            WHERE a.city_id = c.id
+        </sql>
+
+        <!-- Step 6: Drop old INT columns -->
+        <dropColumn tableName="users" columnName="city_id"/>
+        <dropColumn tableName="alerts" columnName="city_id"/>
+        <dropPrimaryKey tableName="cities" constraintName="cities_pkey"/>
+        <dropColumn tableName="cities" columnName="id"/>
+
+        <!-- Step 7: Rename new UUID columns to original names -->
+        <renameColumn tableName="cities" oldColumnName="id_new" newColumnName="id" columnDataType="UUID"/>
+        <renameColumn tableName="users" oldColumnName="city_id_new" newColumnName="city_id" columnDataType="UUID"/>
+        <renameColumn tableName="alerts" oldColumnName="city_id_new" newColumnName="city_id" columnDataType="UUID"/>
+
+        <!-- Step 8: Add primary key constraint on new UUID column -->
+        <addPrimaryKey tableName="cities" columnNames="id" constraintName="cities_pkey"/>
+
+        <!-- Step 9: Add default value for new records -->
+        <addDefaultValue tableName="cities" columnName="id" defaultValueComputed="gen_random_uuid()"/>
+
+        <!-- Step 10: Recreate foreign key constraints -->
+        <addForeignKeyConstraint baseTableName="users" baseColumnNames="city_id"
+                                 referencedTableName="cities" referencedColumnNames="id"
+                                 constraintName="fk_users_city"/>
+        <addForeignKeyConstraint baseTableName="alerts" baseColumnNames="city_id"
+                                 referencedTableName="cities" referencedColumnNames="id"
+                                 constraintName="fk_alerts_city"/>
+    </changeSet>
+
 </databaseChangeLog>
