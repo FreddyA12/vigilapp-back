@@ -5,6 +5,9 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
 
     <!-- Enable required extensions -->
+    <changeSet id="ext-0" author="junie">
+        <sql>CREATE EXTENSION IF NOT EXISTS pgcrypto</sql>
+    </changeSet>
     <changeSet id="ext-1" author="junie">
         <sql>CREATE EXTENSION IF NOT EXISTS postgis</sql>
     </changeSet>
@@ -351,4 +354,62 @@
                                  constraintName="fk_alerts_city"/>
     </changeSet>
 
+    <!-- Geospatial Indexes for Performance -->
+    <changeSet id="indexes-geospatial-1" author="junie">
+        <sql>CREATE INDEX IF NOT EXISTS idx_alerts_geometry ON alerts USING GIST(geometry)</sql>
+    </changeSet>
+
+    <changeSet id="indexes-geospatial-2" author="junie">
+        <sql>CREATE INDEX IF NOT EXISTS idx_user_zones_geometry ON user_zones USING GIST(geometry)</sql>
+    </changeSet>
+
+    <!-- Regular Indexes for Performance -->
+    <changeSet id="indexes-regular-1" author="junie">
+        <sql>CREATE INDEX IF NOT EXISTS idx_alerts_created_at ON alerts(created_at DESC)</sql>
+    </changeSet>
+
+    <changeSet id="indexes-regular-2" author="junie">
+        <sql>CREATE INDEX IF NOT EXISTS idx_alerts_status ON alerts(status)</sql>
+    </changeSet>
+
+    <changeSet id="indexes-regular-3" author="junie">
+        <sql>CREATE INDEX IF NOT EXISTS idx_alerts_category ON alerts(category)</sql>
+    </changeSet>
+
+    <changeSet id="indexes-regular-4" author="junie">
+        <sql>CREATE INDEX IF NOT EXISTS idx_alerts_verification_status ON alerts(verification_status)</sql>
+    </changeSet>
+
+    <changeSet id="indexes-regular-5" author="junie">
+        <sql>CREATE INDEX IF NOT EXISTS idx_alerts_user_id ON alerts(created_by_user_id)</sql>
+    </changeSet>
+
+    <changeSet id="indexes-regular-6" author="junie">
+        <sql>CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id)</sql>
+    </changeSet>
+
+    <changeSet id="indexes-regular-7" author="junie">
+        <sql>CREATE INDEX IF NOT EXISTS idx_notifications_status ON notifications(status)</sql>
+    </changeSet>
+
+    <changeSet id="indexes-regular-8" author="junie">
+        <sql>CREATE INDEX IF NOT EXISTS idx_user_zones_user_id ON user_zones(user_id)</sql>
+    </changeSet>
+
+    
+    <!-- Add missing extensions and columns to align with JPA entities -->
+    <changeSet id="ext-3-pgcrypto" author="junie">
+        <sql>CREATE EXTENSION IF NOT EXISTS pgcrypto</sql>
+    </changeSet>
+
+    <changeSet id="schema-6b-notifications-add-created-at" author="junie">
+        <addColumn tableName="notifications">
+            <column name="created_at" type="TIMESTAMPTZ" defaultValueComputed="NOW()">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
 </databaseChangeLog>
+
+
