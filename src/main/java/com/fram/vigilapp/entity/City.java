@@ -3,6 +3,8 @@ package com.fram.vigilapp.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.UUID;
+
 @Entity
 @Setter
 @Getter
@@ -13,7 +15,7 @@ import lombok.*;
 public class City {
     @Id
     @Column(name = "id")
-    private Integer id;
+    private UUID id;
 
     @Column(name = "name", columnDefinition = "text")
     private String name;
