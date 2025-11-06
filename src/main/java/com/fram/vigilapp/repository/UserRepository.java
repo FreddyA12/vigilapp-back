@@ -18,7 +18,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
      */
     @Query(value = "SELECT DISTINCT u.* FROM users u " +
             "INNER JOIN user_zones uz ON u.id = uz.user_id " +
-            "WHERE ST_Intersects(uz.geometry, ST_SetSRID(:alertPoint, 4326)::geography) " +
+            "WHERE ST_Intersects(uz.geometry, ST_SetSRID(:alertPoint, 4326)) " +
             "AND u.status = 'ACTIVE'",
             nativeQuery = true)
     List<User> findUsersInZone(@Param("alertPoint") Point alertPoint);

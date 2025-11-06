@@ -7,6 +7,7 @@ import com.fram.vigilapp.entity.UserZone;
 import com.fram.vigilapp.repository.UserZoneRepository;
 import com.fram.vigilapp.service.UserZoneService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
@@ -19,6 +20,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserZoneServiceImpl implements UserZoneService {
 
     private final UserZoneRepository userZoneRepository;
@@ -27,7 +29,15 @@ public class UserZoneServiceImpl implements UserZoneService {
     @Override
     @Transactional
     public UserZoneDto createOrUpdateUserZone(User user, SaveUserZoneDto saveUserZoneDto) {
+        log.info("[UserZoneService] 🔄 Creating/updating zone for user: {}", user.getEmail());
+        
         UserZone userZone = userZoneRepository.findByUser(user).orElse(null);
+        
+        if (userZone == null) {
+            log.info("[UserZoneService] ➕ Creating NEW zone for user: {}", user.getEmail());
+        } else {
+            log.info("[UserZoneService] 🔄 Updating EXISTING zone: {}", userZone.getId());
+        }
 
         Point centerPoint = geometryFactory.createPoint(
                 new Coordinate(saveUserZoneDto.getCenterLongitude(), saveUserZoneDto.getCenterLatitude())
@@ -51,7 +61,13 @@ public class UserZoneServiceImpl implements UserZoneService {
             userZone.setRadiusM(saveUserZoneDto.getRadiusM());
         }
 
-        userZone = userZoneRepository.save(userZone);
+        try {
+            userZone = userZoneRepository.save(userZone);
+            log.info("[UserZoneService] ✅ Zone saved successfully: id={}", userZone.getId());
+        } catch (Exception e) {
+            log.error("[UserZoneService] ❌ Error saving zone: {}", e.getMessage(), e);
+            throw e;
+        }
 
         return mapToDto(userZone, saveUserZoneDto.getCenterLatitude(), saveUserZoneDto.getCenterLongitude());
     }

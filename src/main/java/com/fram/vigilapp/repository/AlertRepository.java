@@ -62,7 +62,7 @@ public interface AlertRepository extends JpaRepository<Alert, UUID> {
      */
     @Query(value = "SELECT a.* FROM alerts a " +
             "WHERE a.status = 'ACTIVE' " +
-            "AND ST_Within(a.geometry::geography, ST_MakeEnvelope(:minLon, :minLat, :maxLon, :maxLat, 4326)::geography)",
+            "AND ST_Within(a.geometry::geometry, ST_MakeEnvelope(:minLon, :minLat, :maxLon, :maxLat, 4326))",
             nativeQuery = true)
     List<Alert> findAlertsInBounds(
             @Param("minLat") Double minLat,
