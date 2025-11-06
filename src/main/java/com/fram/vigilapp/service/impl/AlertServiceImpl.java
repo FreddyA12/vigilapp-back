@@ -267,6 +267,7 @@ public class AlertServiceImpl implements AlertService {
         Double gridSizeDegrees = gridSizeM / 111320.0;
 
         Map<String, HeatmapPointDto> gridMap = new HashMap<>();
+        int maxCount = 0;
 
         // Populate grid cells with alert counts
         for (Alert alert : alerts) {
@@ -282,15 +283,24 @@ public class AlertServiceImpl implements AlertService {
             HeatmapPointDto point = gridMap.getOrDefault(gridKey, HeatmapPointDto.builder()
                     .latitude(gridLat + gridSizeDegrees / 2) // Center of cell
                     .longitude(gridLon + gridSizeDegrees / 2)
-                    .intensity(0)
+                    .count(0)
+                    .intensity(0.0)
                     .build());
 
-            point.setIntensity(point.getIntensity() + 1);
+            point.setCount(point.getCount() + 1);
+            maxCount = Math.max(maxCount, point.getCount());
             gridMap.put(gridKey, point);
         }
 
+        // Normalize intensity based on max count
+        final int finalMaxCount = Math.max(maxCount, 1); // Avoid division by zero
+        gridMap.values().forEach(point -> {
+            // Normalize to 0.0 - 1.0 range
+            point.setIntensity((double) point.getCount() / finalMaxCount);
+        });
+
         return gridMap.values().stream()
-                .sorted((a, b) -> b.getIntensity().compareTo(a.getIntensity()))
+                .sorted((a, b) -> b.getCount().compareTo(a.getCount()))
                 .collect(Collectors.toList());
     }
 
