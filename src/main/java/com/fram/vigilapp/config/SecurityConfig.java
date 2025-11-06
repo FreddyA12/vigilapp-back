@@ -51,6 +51,7 @@ public class SecurityConfig {
                 }))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/register", "/api/login").permitAll()
+                        .requestMatchers("/ws/**").permitAll()  // Permitir WebSocket sin autenticación
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session ->
