@@ -35,7 +35,8 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     @Transactional(readOnly = true)
     public Page<NotificationDto> getUserNotifications(UUID userId, Pageable pageable) {
-        return notificationRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable)
+        // Traer solo notificaciones no borradas
+        return notificationRepository.findByUserIdAndNotDeleted(userId, pageable)
                 .map(this::mapToDto);
     }
 
@@ -76,7 +77,9 @@ public class NotificationServiceImpl implements NotificationService {
         Notification notification = notificationRepository.findById(notificationId)
                 .orElseThrow(() -> new RuntimeException("Notificación no encontrada"));
 
-        notificationRepository.delete(notification);
+        // Borrado lógico
+        notification.setDeletedAt(OffsetDateTime.now());
+        notificationRepository.save(notification);
     }
 
     @Override
@@ -190,6 +193,30 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public long countUnreadNotifications(UUID userId) {
+        return notificationRepository.countUnreadNotifications(userId);
+    }
+
+    @Override
+    @Transactional
+    public NotificationDto markAsRead(UUID notificationId) {
+        Notification notification = notificationRepository.findById(notificationId)
+                .orElseThrow(() -> new RuntimeException("Notificación no encontrada"));
+
+        notification.setReadAt(OffsetDateTime.now());
+        notification = notificationRepository.save(notification);
+
+        return mapToDto(notification);
+    }
+
+    @Override
+    @Transactional
+    public int markAllAsRead(UUID userId) {
+        return notificationRepository.markAllAsReadForUser(userId);
+    }
+
+    @Override
     @Transactional
     public void deleteOldNotifications(int daysOld) {
         OffsetDateTime cutoffDate = OffsetDateTime.now().minus(daysOld, ChronoUnit.DAYS);
@@ -211,6 +238,9 @@ public class NotificationServiceImpl implements NotificationService {
                 .status(notification.getStatus())
                 .sentAt(notification.getSentAt())
                 .deliveredAt(notification.getDeliveredAt())
+                .readAt(notification.getReadAt())
+                .isRead(notification.getReadAt() != null)
+                .deletedAt(notification.getDeletedAt())
                 .createdAt(notification.getCreatedAt())
                 .build();
     }

@@ -55,4 +55,23 @@ public interface NotificationRepository extends JpaRepository<Notification, UUID
      * Find notifications by multiple statuses
      */
     List<Notification> findByStatusInOrderByCreatedAtDesc(List<String> statuses);
+
+    /**
+     * Find all non-deleted notifications for a user, ordered by creation date (newest first)
+     */
+    @Query("SELECT n FROM Notification n WHERE n.user.id = :userId AND n.deletedAt IS NULL ORDER BY n.createdAt DESC")
+    Page<Notification> findByUserIdAndNotDeleted(@Param("userId") UUID userId, Pageable pageable);
+
+    /**
+     * Count unread notifications for a user (not deleted and not read)
+     */
+    @Query("SELECT COUNT(n) FROM Notification n WHERE n.user.id = :userId AND n.deletedAt IS NULL AND n.readAt IS NULL")
+    long countUnreadNotifications(@Param("userId") UUID userId);
+
+    /**
+     * Mark all unread notifications as read for a user
+     */
+    @Query("UPDATE Notification n SET n.readAt = CURRENT_TIMESTAMP WHERE n.user.id = :userId AND n.readAt IS NULL AND n.deletedAt IS NULL")
+    @org.springframework.data.jpa.repository.Modifying
+    int markAllAsReadForUser(@Param("userId") UUID userId);
 }

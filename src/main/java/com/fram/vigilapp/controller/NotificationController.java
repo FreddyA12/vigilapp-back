@@ -25,6 +25,23 @@ public class NotificationController {
 
     /**
      * Get paginated notifications for the current user
+     * GET /api/notifications?page=0&size=20
+     */
+    @GetMapping
+    @PreAuthorize("hasAnyRole('USER', 'MOD', 'ADMIN')")
+    public ResponseEntity<Page<NotificationDto>> getAllUserNotifications(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+
+        UUID userId = userUtil.getUserId();
+        Pageable pageable = PageRequest.of(page, size);
+        Page<NotificationDto> notifications = notificationService.getUserNotifications(userId, pageable);
+
+        return ResponseEntity.ok(notifications);
+    }
+
+    /**
+     * Get paginated notifications for the current user (legacy endpoint)
      * GET /api/notifications/me?page=0&size=20
      */
     @GetMapping("/me")
@@ -93,6 +110,42 @@ public class NotificationController {
         long count = notificationService.countUndeliveredNotifications(userId);
 
         return ResponseEntity.ok(count);
+    }
+
+    /**
+     * Get count of unread notifications (not deleted and not read)
+     * GET /api/notifications/unread/count
+     */
+    @GetMapping("/unread/count")
+    @PreAuthorize("hasAnyRole('USER', 'MOD', 'ADMIN')")
+    public ResponseEntity<Long> countUnreadNotifications() {
+        UUID userId = userUtil.getUserId();
+        long count = notificationService.countUnreadNotifications(userId);
+
+        return ResponseEntity.ok(count);
+    }
+
+    /**
+     * Mark a notification as read
+     * PUT /api/notifications/{notificationId}/read
+     */
+    @PutMapping("/{notificationId}/read")
+    @PreAuthorize("hasAnyRole('USER', 'MOD', 'ADMIN')")
+    public ResponseEntity<NotificationDto> markAsRead(@PathVariable UUID notificationId) {
+        NotificationDto notification = notificationService.markAsRead(notificationId);
+        return ResponseEntity.ok(notification);
+    }
+
+    /**
+     * Mark all unread notifications as read for the current user
+     * PUT /api/notifications/read-all
+     */
+    @PutMapping("/read-all")
+    @PreAuthorize("hasAnyRole('USER', 'MOD', 'ADMIN')")
+    public ResponseEntity<Void> markAllAsRead() {
+        UUID userId = userUtil.getUserId();
+        notificationService.markAllAsRead(userId);
+        return ResponseEntity.noContent().build();
     }
 
     /**
