@@ -7,6 +7,7 @@ import com.fram.vigilapp.dto.SaveAlertDto;
 import com.fram.vigilapp.entity.User;
 import com.fram.vigilapp.repository.UserRepository;
 import com.fram.vigilapp.service.AlertService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -14,10 +15,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -46,6 +49,40 @@ public class AlertController {
 
         AlertDto alertDto = alertService.createAlert(user, saveAlertDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(alertDto);
+    }
+
+    /**
+     * Crea una alerta con archivos adjuntos (evidencia).
+     * Los archivos que son imágenes serán procesados automáticamente para difuminar caras.
+     *
+     * POST /api/alerts/with-media
+     */
+    @PostMapping(value = "/with-media", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyAuthority('USER', 'MOD', 'ADMIN')")
+    public ResponseEntity<AlertDto> createAlertWithMedia(
+            @RequestPart("alert") String alertJson,
+            @RequestPart(value = "files", required = false) List<MultipartFile> files,
+            Authentication authentication
+    ) {
+        try {
+            String email = authentication.getName();
+            User user = userRepository.findByEmail(email);
+
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
+            // Parsear JSON a SaveAlertDto
+            ObjectMapper objectMapper = new ObjectMapper();
+            SaveAlertDto saveAlertDto = objectMapper.readValue(alertJson, SaveAlertDto.class);
+
+            // Crear alerta con archivos adjuntos
+            AlertDto alertDto = alertService.createAlertWithMedia(user, saveAlertDto, files);
+            return ResponseEntity.status(HttpStatus.CREATED).body(alertDto);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
     }
 
     @GetMapping("/{alertId}")

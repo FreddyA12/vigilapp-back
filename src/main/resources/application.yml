@@ -37,3 +37,12 @@ face:
       startup:
         wait:
           seconds: 10
+
+media:
+  upload:
+    directory: ${user.home}/vigilapp/uploads
+    max-file-size: 10MB
+    allowed-types: image/jpeg,image/png,image/jpg,video/mp4,video/quicktime
+  blur:
+    enabled: true
+    auto-blur-images: true
