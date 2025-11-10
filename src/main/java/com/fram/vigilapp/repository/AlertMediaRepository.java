@@ -11,6 +11,6 @@ import java.util.UUID;
 
 public interface AlertMediaRepository extends JpaRepository<AlertMedia, AlertMediaId> {
 
-    @Query("SELECT am FROM AlertMedia am WHERE am.alert.id = :alertId")
+    @Query("SELECT am FROM AlertMedia am JOIN FETCH am.media WHERE am.alert.id = :alertId")
     List<AlertMedia> findByAlertId(@Param("alertId") UUID alertId);
 }
