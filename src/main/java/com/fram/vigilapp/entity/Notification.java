@@ -39,6 +39,12 @@ public class Notification {
     @Column(name = "delivered_at", columnDefinition = "timestamptz")
     private OffsetDateTime deliveredAt;
 
+    @Column(name = "read_at", columnDefinition = "timestamptz")
+    private OffsetDateTime readAt;
+
+    @Column(name = "deleted_at", columnDefinition = "timestamptz")
+    private OffsetDateTime deletedAt;
+
     @Column(name = "created_at", columnDefinition = "timestamptz")
     private OffsetDateTime createdAt;
 }

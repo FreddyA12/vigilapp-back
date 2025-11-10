@@ -3,17 +3,13 @@ package com.fram.vigilapp.service.impl;
 import com.fram.vigilapp.dto.AlertDto;
 import com.fram.vigilapp.dto.AlertStatsDto;
 import com.fram.vigilapp.dto.HeatmapPointDto;
+import com.fram.vigilapp.dto.MediaDto;
 import com.fram.vigilapp.dto.SaveAlertDto;
-import com.fram.vigilapp.entity.Alert;
-import com.fram.vigilapp.entity.City;
-import com.fram.vigilapp.entity.User;
-import com.fram.vigilapp.entity.UserZone;
-import com.fram.vigilapp.repository.AlertRepository;
-import com.fram.vigilapp.repository.CityRepository;
-import com.fram.vigilapp.repository.UserRepository;
-import com.fram.vigilapp.repository.UserZoneRepository;
+import com.fram.vigilapp.entity.*;
+import com.fram.vigilapp.repository.*;
 import com.fram.vigilapp.service.AlertService;
 import com.fram.vigilapp.service.AlertNotificationService;
+import com.fram.vigilapp.service.MediaService;
 import com.fram.vigilapp.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.locationtech.jts.geom.Coordinate;
@@ -24,13 +20,11 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -43,6 +37,8 @@ public class AlertServiceImpl implements AlertService {
     private final UserRepository userRepository;
     private final NotificationService notificationService;
     private final AlertNotificationService alertNotificationService;
+    private final MediaService mediaService;
+    private final AlertMediaRepository alertMediaRepository;
     private final GeometryFactory geometryFactory = new GeometryFactory();
 
     @Override
@@ -90,6 +86,80 @@ public class AlertServiceImpl implements AlertService {
             alertNotificationService.notifyNewAlert(alert, alertDto);
         } catch (Exception e) {
             // Log error but don't fail alert creation
+            System.err.println("Error sending WebSocket notification for alert: " + e.getMessage());
+        }
+
+        return alertDto;
+    }
+
+    @Override
+    @Transactional
+    public AlertDto createAlertWithMedia(User user, SaveAlertDto saveAlertDto, List<MultipartFile> files) {
+        // Crear la alerta primero
+        Point alertPoint = geometryFactory.createPoint(
+                new Coordinate(saveAlertDto.getLongitude(), saveAlertDto.getLatitude())
+        );
+        alertPoint.setSRID(4326);
+
+        City city = null;
+        if (saveAlertDto.getCityId() != null) {
+            city = cityRepository.findById(saveAlertDto.getCityId()).orElse(null);
+        }
+
+        Integer radiusM = saveAlertDto.getRadiusM() != null ? saveAlertDto.getRadiusM() : 1000;
+
+        Alert alert = Alert.builder()
+                .createdByUser(user)
+                .category(saveAlertDto.getCategory())
+                .status("ACTIVE")
+                .verificationStatus("PENDING")
+                .title(saveAlertDto.getTitle())
+                .description(saveAlertDto.getDescription())
+                .isAnonymous(saveAlertDto.getIsAnonymous() != null ? saveAlertDto.getIsAnonymous() : false)
+                .address(saveAlertDto.getAddress())
+                .city(city)
+                .geometry(alertPoint)
+                .radiusM(radiusM)
+                .build();
+
+        alert = alertRepository.save(alert);
+
+        // Procesar y guardar archivos adjuntos (evidencia)
+        List<Media> mediaList = new ArrayList<>();
+        if (files != null && !files.isEmpty()) {
+            try {
+                // Procesar archivos con blur automático para imágenes
+                mediaList = mediaService.processAndSaveMultipleMedia(files, user, true);
+
+                // Asociar media con la alerta
+                for (Media media : mediaList) {
+                    AlertMedia alertMedia = AlertMedia.builder()
+                            .alert(alert)
+                            .media(media)
+                            .build();
+                    alertMediaRepository.save(alertMedia);
+                }
+
+                System.out.println("Se procesaron y guardaron " + mediaList.size() + " archivos para la alerta " + alert.getId());
+            } catch (Exception e) {
+                System.err.println("Error al procesar archivos adjuntos: " + e.getMessage());
+                // No fallamos la creación de la alerta si hay error con los archivos
+            }
+        }
+
+        AlertDto alertDto = mapToDto(alert, null, mediaList);
+
+        // Notify users in zone
+        try {
+            notificationService.notifyUsersInZone(alert, "PUSH");
+        } catch (Exception e) {
+            System.err.println("Error saving notifications for alert: " + e.getMessage());
+        }
+
+        // Enviar notificación por WebSocket
+        try {
+            alertNotificationService.notifyNewAlert(alert, alertDto);
+        } catch (Exception e) {
             System.err.println("Error sending WebSocket notification for alert: " + e.getMessage());
         }
 
@@ -376,11 +446,32 @@ public class AlertServiceImpl implements AlertService {
     }
 
     private AlertDto mapToDto(Alert alert, Double distance) {
+        // Cargar media asociada a la alerta
+        List<AlertMedia> alertMediaList = alertMediaRepository.findByAlertId(alert.getId());
+        List<Media> mediaList = alertMediaList.stream()
+                .map(AlertMedia::getMedia)
+                .collect(Collectors.toList());
+
+        return mapToDto(alert, distance, mediaList);
+    }
+
+    private AlertDto mapToDto(Alert alert, Double distance, List<Media> mediaList) {
         String createdByUserName = null;
         if (!Boolean.TRUE.equals(alert.getIsAnonymous())) {
             createdByUserName = alert.getCreatedByUser().getFirstName() + " " +
                     alert.getCreatedByUser().getLastName();
         }
+
+        // Convertir Media a MediaDto
+        List<MediaDto> mediaDtoList = mediaList != null ? mediaList.stream()
+                .map(media -> MediaDto.builder()
+                        .id(media.getId())
+                        .url(media.getUrl())
+                        .mimeType(media.getMimeType())
+                        .wasBlurred(media.getForBlurAnalysis())
+                        .createdAt(media.getCreatedAt())
+                        .build())
+                .collect(Collectors.toList()) : new ArrayList<>();
 
         return AlertDto.builder()
                 .id(alert.getId())
@@ -402,6 +493,7 @@ public class AlertServiceImpl implements AlertService {
                 .updatedAt(alert.getUpdatedAt())
                 .resolvedAt(alert.getResolvedAt())
                 .distanceFromUserM(distance)
+                .media(mediaDtoList)
                 .build();
     }
 }

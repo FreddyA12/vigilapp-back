@@ -20,5 +20,8 @@ public class NotificationDto {
     private String status; // QUEUED | SENT | DELIVERED | FAILED
     private OffsetDateTime sentAt;
     private OffsetDateTime deliveredAt;
+    private OffsetDateTime readAt;
+    private Boolean isRead; // Helper field computed from readAt
+    private OffsetDateTime deletedAt;
     private OffsetDateTime createdAt;
 }

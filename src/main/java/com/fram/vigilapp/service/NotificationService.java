@@ -79,9 +79,24 @@ public interface NotificationService {
     NotificationDto markAsFailed(UUID notificationId);
 
     /**
-     * Count unread notifications for a user
+     * Count undelivered notifications for a user
      */
     long countUndeliveredNotifications(UUID userId);
+
+    /**
+     * Count unread notifications for a user (not deleted and not read)
+     */
+    long countUnreadNotifications(UUID userId);
+
+    /**
+     * Mark a notification as read
+     */
+    NotificationDto markAsRead(UUID notificationId);
+
+    /**
+     * Mark all unread notifications as read for a user
+     */
+    int markAllAsRead(UUID userId);
 
     /**
      * Delete old notifications (older than specified days)

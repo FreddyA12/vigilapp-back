@@ -3,6 +3,7 @@ package com.fram.vigilapp.dto;
 import lombok.*;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -30,4 +31,5 @@ public class AlertDto {
     private OffsetDateTime updatedAt;
     private OffsetDateTime resolvedAt;
     private Double distanceFromUserM;
+    private List<MediaDto> media;
 }

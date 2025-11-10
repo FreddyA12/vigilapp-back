@@ -410,6 +410,18 @@
         </addColumn>
     </changeSet>
 
+    <!-- Add read_at and deleted_at columns for notification features -->
+    <changeSet id="schema-7-notifications-add-read-deleted" author="claude">
+        <addColumn tableName="notifications">
+            <column name="read_at" type="TIMESTAMPTZ">
+                <constraints nullable="true"/>
+            </column>
+            <column name="deleted_at" type="TIMESTAMPTZ">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
 </databaseChangeLog>
 
 

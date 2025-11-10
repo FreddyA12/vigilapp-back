@@ -5,6 +5,7 @@ import com.fram.vigilapp.dto.SaveAlertDto;
 import com.fram.vigilapp.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -12,6 +13,12 @@ import java.util.UUID;
 
 public interface AlertService {
     AlertDto createAlert(User user, SaveAlertDto saveAlertDto);
+
+    /**
+     * Crea una alerta con archivos de evidencia adjuntos.
+     * Las imágenes serán procesadas para difuminar caras automáticamente.
+     */
+    AlertDto createAlertWithMedia(User user, SaveAlertDto saveAlertDto, List<MultipartFile> files);
     AlertDto getAlertById(UUID alertId);
     List<AlertDto> getAlertsNearLocation(Double latitude, Double longitude, Integer radiusM, boolean activeOnly);
     List<AlertDto> getAlertsInUserZone(UUID userId);
