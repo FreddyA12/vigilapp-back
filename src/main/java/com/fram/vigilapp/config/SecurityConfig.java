@@ -52,6 +52,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/register", "/api/login").permitAll()
                         .requestMatchers("/ws/**").permitAll()  // Permitir WebSocket sin autenticación
+                        .requestMatchers("/uploads/**").permitAll()  // Permitir acceso público a archivos multimedia
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session ->
