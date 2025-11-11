@@ -25,7 +25,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         
         // Crear authority basado en el rol del usuario
         // El rol en la DB es "USER", "MOD" o "ADMIN"
-        SimpleGrantedAuthority authority = new SimpleGrantedAuthority(user.getRole());
+        SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + user.getRole());
         
         return new org.springframework.security.core.userdetails.User(
             user.getEmail(), 

@@ -51,17 +51,26 @@ def blur_faces_in_image(image_bytes: bytes, blur_intensity: int = 99) -> bytes:
         # Convertir a BGR para OpenCV
         image_bgr = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
 
-        # Asegurar que blur_intensity sea impar
-        if blur_intensity % 2 == 0:
-            blur_intensity += 1
-
         # Aplicar blur a cada cara detectada
         for top, right, bottom, left in face_locations:
             # Extraer la región de la cara
             face_region = image_bgr[top:bottom, left:right]
 
-            # Aplicar blur gaussiano muy fuerte
-            blurred_face = cv2.GaussianBlur(face_region, (blur_intensity, blur_intensity), 0)
+            h, w = face_region.shape[:2]
+
+            # Pixelación agresiva
+            pixel_size = max(25, min(w, h) // 6)
+
+            # Reducir tamaño
+            small = cv2.resize(face_region, (w // pixel_size, h // pixel_size), interpolation=cv2.INTER_LINEAR)
+
+            # Ampliar de nuevo (efecto pixelado)
+            pixelated = cv2.resize(small, (w, h), interpolation=cv2.INTER_NEAREST)
+
+            # Múltiples pasadas de blur gaussiano con sigma alto
+            blurred_face = pixelated
+            for _ in range(4):
+                blurred_face = cv2.GaussianBlur(blurred_face, (99, 99), 50)
 
             # Reemplazar la región de la cara con la versión difuminada
             image_bgr[top:bottom, left:right] = blurred_face
@@ -123,7 +132,17 @@ def blur_faces_advanced(image_bytes: bytes, blur_factor: float = 3.0) -> dict:
 
             for top, right, bottom, left in face_locations:
                 face_region = image_bgr[top:bottom, left:right]
-                blurred_face = cv2.GaussianBlur(face_region, (blur_intensity, blur_intensity), 0)
+                h, w = face_region.shape[:2]
+
+                # Pixelación agresiva
+                pixel_size = max(25, min(w, h) // 6)
+                small = cv2.resize(face_region, (w // pixel_size, h // pixel_size), interpolation=cv2.INTER_LINEAR)
+                pixelated = cv2.resize(small, (w, h), interpolation=cv2.INTER_NEAREST)
+
+                # Múltiples pasadas de blur
+                blurred_face = pixelated
+                for _ in range(4):
+                    blurred_face = cv2.GaussianBlur(blurred_face, (99, 99), 50)
                 image_bgr[top:bottom, left:right] = blurred_face
 
             image_rgb = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB)
