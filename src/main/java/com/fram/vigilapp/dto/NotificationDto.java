@@ -15,6 +15,7 @@ public class NotificationDto {
     private UUID alertId;
     private String alertTitle;
     private String alertCategory;
+    private String alertDescription;
     private UUID userId;
     private String channel; // PUSH | EMAIL | SMS
     private String status; // QUEUED | SENT | DELIVERED | FAILED

@@ -35,7 +35,7 @@ public class AlertController {
     private final UserRepository userRepository;
 
     @PostMapping
-    @PreAuthorize("hasAnyAuthority('USER', 'MOD', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'MOD', 'ADMIN')")
     public ResponseEntity<AlertDto> createAlert(
             @Valid @RequestBody SaveAlertDto saveAlertDto,
             Authentication authentication
@@ -58,7 +58,7 @@ public class AlertController {
      * POST /api/alerts/with-media
      */
     @PostMapping(value = "/with-media", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAnyAuthority('USER', 'MOD', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'MOD', 'ADMIN')")
     public ResponseEntity<AlertDto> createAlertWithMedia(
             @RequestPart("alert") String alertJson,
             @RequestPart(value = "files", required = false) List<MultipartFile> files,
@@ -86,7 +86,7 @@ public class AlertController {
     }
 
     @GetMapping("/{alertId}")
-    @PreAuthorize("hasAnyAuthority('USER', 'MOD', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'MOD', 'ADMIN')")
     public ResponseEntity<AlertDto> getAlert(@PathVariable UUID alertId) {
         try {
             AlertDto alertDto = alertService.getAlertById(alertId);
@@ -97,7 +97,7 @@ public class AlertController {
     }
 
     @GetMapping("/nearby")
-    @PreAuthorize("hasAnyAuthority('USER', 'MOD', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'MOD', 'ADMIN')")
     public ResponseEntity<List<AlertDto>> getAlertsNearLocation(
             @RequestParam Double latitude,
             @RequestParam Double longitude,
@@ -109,7 +109,7 @@ public class AlertController {
     }
 
     @GetMapping("/my-zone")
-    @PreAuthorize("hasAnyAuthority('USER', 'MOD', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'MOD', 'ADMIN')")
     public ResponseEntity<List<AlertDto>> getAlertsInMyZone(Authentication authentication) {
         String email = authentication.getName();
         User user = userRepository.findByEmail(email);
@@ -127,7 +127,7 @@ public class AlertController {
     }
 
     @GetMapping("/my-alerts")
-    @PreAuthorize("hasAnyAuthority('USER', 'MOD', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'MOD', 'ADMIN')")
     public ResponseEntity<List<AlertDto>> getMyAlerts(Authentication authentication) {
         String email = authentication.getName();
         User user = userRepository.findByEmail(email);
@@ -141,14 +141,14 @@ public class AlertController {
     }
 
     @GetMapping("/by-status")
-    @PreAuthorize("hasAnyAuthority('MOD', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('MOD', 'ADMIN')")
     public ResponseEntity<List<AlertDto>> getAlertsByStatus(@RequestParam String status) {
         List<AlertDto> alerts = alertService.getAlertsByStatus(status);
         return ResponseEntity.ok(alerts);
     }
 
     @GetMapping("/by-category-status")
-    @PreAuthorize("hasAnyAuthority('USER', 'MOD', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'MOD', 'ADMIN')")
     public ResponseEntity<List<AlertDto>> getAlertsByCategoryAndStatus(
             @RequestParam String category,
             @RequestParam String status
@@ -158,7 +158,7 @@ public class AlertController {
     }
 
     @PutMapping("/{alertId}/status")
-    @PreAuthorize("hasAnyAuthority('MOD', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('MOD', 'ADMIN')")
     public ResponseEntity<AlertDto> updateAlertStatus(
             @PathVariable UUID alertId,
             @RequestParam String status
@@ -172,7 +172,7 @@ public class AlertController {
     }
 
     @DeleteMapping("/{alertId}")
-    @PreAuthorize("hasAnyAuthority('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     public ResponseEntity<Void> deleteAlert(@PathVariable UUID alertId) {
         try {
             alertService.deleteAlert(alertId);
@@ -187,7 +187,7 @@ public class AlertController {
      * GET /api/alerts/recent?page=0&size=20
      */
     @GetMapping("/recent")
-    @PreAuthorize("hasAnyAuthority('USER', 'MOD', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'MOD', 'ADMIN')")
     public ResponseEntity<Page<AlertDto>> getRecentAlerts(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -201,7 +201,7 @@ public class AlertController {
      * GET /api/alerts/search?query=incendio&category=EMERGENCY&status=ACTIVE&skip=0&limit=20
      */
     @GetMapping("/search")
-    @PreAuthorize("hasAnyAuthority('USER', 'MOD', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'MOD', 'ADMIN')")
     public ResponseEntity<List<AlertDto>> searchAlerts(
             @RequestParam(required = false) String query,
             @RequestParam(required = false) String category,
@@ -228,7 +228,7 @@ public class AlertController {
      * GET /api/alerts/heatmap?swLat=10.0&swLon=-75.0&neLat=11.0&neLon=-74.0&gridSizeM=1000
      */
     @GetMapping("/heatmap")
-    @PreAuthorize("hasAnyAuthority('USER', 'MOD', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'MOD', 'ADMIN')")
     public ResponseEntity<List<HeatmapPointDto>> getHeatmapData(
             @RequestParam Double swLat,
             @RequestParam Double swLon,
@@ -245,7 +245,7 @@ public class AlertController {
      * GET /api/alerts/stats?timeRange=7d&cityId=<uuid>
      */
     @GetMapping("/stats")
-    @PreAuthorize("hasAnyAuthority('USER', 'MOD', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'MOD', 'ADMIN')")
     public ResponseEntity<AlertStatsDto> getAlertStats(
             @RequestParam(defaultValue = "7d") String timeRange,
             @RequestParam(required = false) UUID cityId) {
