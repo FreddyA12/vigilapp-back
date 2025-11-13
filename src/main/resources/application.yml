@@ -1,0 +1,48 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/vigilapp
+    username: postgres
+    password: postgres
+  jpa:
+    hibernate:
+      ddl-auto: none
+
+  liquibase:
+    enabled: true
+    drop-first: false
+    change-log: classpath:db.changelog.xml
+    default-schema: public
+
+server:
+  error:
+    include-message: always
+
+info:
+  app:
+    name: Fram Vigilapp
+    description: API para la vigilancia
+    version: 1.0.0
+
+jwt:
+  secret: vigilapp-secret-key-for-jwt-token-generation-minimum-256-bits-required-for-hs256-algorithm
+
+face:
+  verification:
+    service:
+      url: http://localhost:8000
+      enabled: true
+      path: face-verification-service
+      python:
+        command: python
+      startup:
+        wait:
+          seconds: 10
+
+media:
+  upload:
+    directory: ${user.home}/vigilapp/uploads
+    max-file-size: 10MB
+    allowed-types: image/jpeg,image/png,image/jpg,video/mp4,video/quicktime
+  blur:
+    enabled: true
+    auto-blur-images: true
