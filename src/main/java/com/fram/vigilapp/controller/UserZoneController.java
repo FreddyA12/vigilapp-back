@@ -24,7 +24,7 @@ public class UserZoneController {
     private final UserRepository userRepository;
 
     @PostMapping
-    @PreAuthorize("hasAnyAuthority('USER', 'MOD', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'MOD', 'ADMIN')")
     public ResponseEntity<UserZoneDto> createOrUpdateUserZone(
             @Valid @RequestBody SaveUserZoneDto saveUserZoneDto,
             Authentication authentication
@@ -56,7 +56,7 @@ public class UserZoneController {
     }
 
     @GetMapping("/me")
-    @PreAuthorize("hasAnyAuthority('USER', 'MOD', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'MOD', 'ADMIN')")
     public ResponseEntity<UserZoneDto> getMyUserZone(Authentication authentication) {
         String email = authentication.getName();
         log.debug("[UserZoneController] getMyUserZone called by: {}", email);
@@ -76,7 +76,7 @@ public class UserZoneController {
     }
 
     @DeleteMapping("/me")
-    @PreAuthorize("hasAnyAuthority('USER', 'MOD', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'MOD', 'ADMIN')")
     public ResponseEntity<Void> deleteMyUserZone(Authentication authentication) {
         String email = authentication.getName();
         log.debug("[UserZoneController] deleteMyUserZone called by: {}", email);

@@ -233,6 +233,7 @@ public class NotificationServiceImpl implements NotificationService {
                 .alertId(notification.getAlert().getId())
                 .alertTitle(notification.getAlert().getTitle())
                 .alertCategory(notification.getAlert().getCategory())
+                .alertDescription(notification.getAlert().getDescription())
                 .userId(notification.getUser().getId())
                 .channel(notification.getChannel())
                 .status(notification.getStatus())
